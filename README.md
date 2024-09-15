@@ -33,3 +33,5 @@
   `192.168.1.x:3000` ( chữ x là số ngẫu nhiên máy host , có thể từ 1-9 )
 ## Lưu ý
 * Do trang web được mở bằng cổng `192.168.x.x` nên mọi người có thể vào được mà không cần dùng Internet. Tất nhiên đây là mạng LAN nên chỉ có đường truyền khá ngắn. Và chỉ hoạt động khi có thiết bị khác kết nối chung một mạng.
+
+* Đây là địa chỉ IP mạng LAN riêng , không thể truy cập bằng Internet công cộng.
