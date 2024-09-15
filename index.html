@@ -7,7 +7,18 @@
     <style>
         body { font-family: Arial, sans-serif; margin: 0; padding: 0; background-color: #f0f0f0; }
         #messages { list-style-type: none; margin: 0; padding: 0; }
-        #messages li { padding: 8px; margin-bottom: 2px; background-color: #fff; border-radius: 4px; }
+        #messages li { 
+            padding: 8px; 
+            margin-bottom: 2px; 
+            background-color: #fff; 
+            border-radius: 4px; 
+            opacity: 0; /* Bắt đầu với độ mờ 0 */
+            transition: opacity 0.5s ease, transform 0.5s ease; /* Thêm hiệu ứng chuyển động */
+        }
+        #messages li.show { 
+            opacity: 1; /* Độ mờ khi hiệu ứng hoàn tất */
+            transform: translateY(0); /* Đặt vị trí cuối cùng của hiệu ứng */
+        }
         #form { position: fixed; bottom: 0; width: 100%; background-color: #fff; padding: 10px; }
         #input { width: 90%; padding: 10px; border: 1px solid #ddd; border-radius: 4px; }
         #submit { padding: 10px; border: none; background-color: #007bff; color: #fff; border-radius: 4px; cursor: pointer; }
@@ -37,6 +48,13 @@
             var item = document.createElement('li');
             item.textContent = msg;
             messages.appendChild(item);
+
+            // Thêm lớp show sau khi tin nhắn được thêm vào
+            setTimeout(function() {
+                item.classList.add('show');
+            }, 10); // Thời gian chờ ngắn để đảm bảo lớp được thêm đúng cách
+            
+            // Cuộn trang đến tin nhắn cuối cùng
             window.scrollTo(0, document.body.scrollHeight);
         });
     </script>
