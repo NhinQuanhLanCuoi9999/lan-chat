@@ -30,33 +30,54 @@ const htmlContent = `
             transform: translateY(0); /* Đặt vị trí cuối cùng của hiệu ứng */
         }
         #form { position: fixed; bottom: 0; width: 100%; background-color: #fff; padding: 10px; }
-        #input { width: 90%; padding: 10px; border: 1px solid #ddd; border-radius: 4px; }
+        #name { width: 20%; padding: 10px; border: 1px solid #ddd; border-radius: 4px; }
+        #input { width: 60%; padding: 10px; border: 1px solid #ddd; border-radius: 4px; }
         #submit { padding: 10px; border: none; background-color: #007bff; color: #fff; border-radius: 4px; cursor: pointer; }
+        .ip-btn { cursor: pointer; color: #007bff; background: none; border: none; text-decoration: underline; }
     </style>
 </head>
 <body>
     <ul id="messages"></ul>
     <form id="form" action="">
-        <input id="input" autocomplete="off" /><button id="submit">Send</button>
+        <input id="name" autocomplete="off" placeholder="Your name" required />
+        <input id="input" autocomplete="off" placeholder="Type a message" required />
+        <button id="submit">Send</button>
     </form>
     <script src="/socket.io/socket.io.js"></script>
     <script>
         var socket = io();
         var form = document.getElementById('form');
-        var input = document.getElementById('input');
+        var nameInput = document.getElementById('name');
+        var messageInput = document.getElementById('input');
         var messages = document.getElementById('messages');
 
         form.addEventListener('submit', function(e) {
             e.preventDefault();
-            if (input.value) {
-                socket.emit('chat message', input.value);
-                input.value = '';
+            if (messageInput.value && nameInput.value) {
+                var message = {
+                    name: nameInput.value,
+                    text: messageInput.value
+                };
+                socket.emit('chat message', message);
+                messageInput.value = '';
             }
         });
 
-        socket.on('chat message', function(msg) {
+        socket.on('chat message', function(data) {
             var item = document.createElement('li');
-            item.textContent = msg;
+            item.textContent = data.name + ': ' + data.text;
+
+            // Thêm nút xem IP
+            if (data.ip) {
+                var ipButton = document.createElement('button');
+                ipButton.className = 'ip-btn';
+                ipButton.textContent = 'Show IP';
+                ipButton.addEventListener('click', function() {
+                    alert('IP Address: ' + data.ip);
+                });
+                item.appendChild(ipButton);
+            }
+
             messages.appendChild(item);
 
             // Thêm lớp show sau khi tin nhắn được thêm vào
@@ -80,9 +101,15 @@ app.get('/', (req, res) => {
 // Cấu hình Socket.io
 io.on('connection', (socket) => {
     console.log('A user connected');
+    
+    // Lưu IP của người gửi
+    const ip = socket.request.headers['x-forwarded-for'] || socket.request.connection.remoteAddress;
+
     socket.on('chat message', (msg) => {
-        io.emit('chat message', msg);
+        // Gửi tin nhắn kèm theo địa chỉ IP của người gửi
+        io.emit('chat message', { ...msg, ip });
     });
+    
     socket.on('disconnect', () => {
         console.log('User disconnected');
     });
