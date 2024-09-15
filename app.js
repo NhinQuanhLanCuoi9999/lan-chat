@@ -38,14 +38,21 @@ const htmlContent = `
         #color { width: 20%; padding: 10px; border: 1px solid #ddd; border-radius: 4px; }
         #submit { padding: 10px; border: none; background-color: #007bff; color: #fff; border-radius: 4px; cursor: pointer; }
         .ip-btn, .color-btn { cursor: pointer; color: #007bff; background: none; border: none; text-decoration: underline; }
+        #messages img {
+            max-width: 100%;
+            max-height: 200px; /* Hoặc kích thước bạn muốn */
+            display: block;
+            margin-top: 5px;
+        }
     </style>
 </head>
 <body>
     <ul id="messages"></ul>
     <form id="form" action="">
         <input id="name" autocomplete="off" placeholder="Your name" required />
-        <input id="input" autocomplete="off" placeholder="Type a message" required />
+        <input id="input" autocomplete="off" placeholder="Type a message" />
         <input id="color" type="color" value="#000000" />
+        <input id="image" type="file" accept="image/*" />
         <button id="submit">Send</button>
     </form>
     <script src="/socket.io/socket.io.js"></script>
@@ -55,17 +62,24 @@ const htmlContent = `
         var nameInput = document.getElementById('name');
         var messageInput = document.getElementById('input');
         var colorInput = document.getElementById('color');
+        var imageInput = document.getElementById('image');
         var messages = document.getElementById('messages');
-        var messageCount = 0; // Đếm số lượng tin nhắn
+        var messageCount = 0;
 
-        // Hàm hiển thị tin nhắn
         function displayMessage(data, messageId) {
             var item = document.createElement('li');
-            item.id = 'message-' + messageId; // Gán ID cho mỗi tin nhắn
-            item.textContent = data.name + ': ' + data.text;
-            item.style.color = data.color; // Áp dụng màu sắc
+            item.id = 'message-' + messageId;
+            item.style.color = data.color;
 
-            // Thêm nút xóa tin nhắn
+            if (data.text) {
+                item.textContent = data.name + ': ' + data.text;
+            }
+            if (data.image) {
+                var img = document.createElement('img');
+                img.src = data.image;
+                item.appendChild(img);
+            }
+
             if (data.name === nameInput.value) {
                 var deleteButton = document.createElement('button');
                 deleteButton.className = 'color-btn';
@@ -76,7 +90,6 @@ const htmlContent = `
                 item.appendChild(deleteButton);
             }
 
-            // Thêm nút xem IP
             if (data.ip) {
                 var ipButton = document.createElement('button');
                 ipButton.className = 'color-btn';
@@ -88,41 +101,44 @@ const htmlContent = `
             }
 
             messages.appendChild(item);
-
-            // Thêm lớp show sau khi tin nhắn được thêm vào
             setTimeout(function() {
                 item.classList.add('show');
-            }, 10); // Thời gian chờ ngắn để đảm bảo lớp được thêm đúng cách
-            
-            // Cuộn trang đến tin nhắn cuối cùng
+            }, 10);
             window.scrollTo(0, document.body.scrollHeight);
         }
 
-        // Xử lý gửi tin nhắn
         form.addEventListener('submit', function(e) {
             e.preventDefault();
-            if (messageInput.value && nameInput.value) {
-                var message = {
-                    name: nameInput.value,
-                    text: messageInput.value,
-                    color: colorInput.value // Lấy giá trị màu
+            var message = {
+                name: nameInput.value,
+                text: messageInput.value,
+                color: colorInput.value
+            };
+
+            if (imageInput.files.length > 0) {
+                var file = imageInput.files[0];
+                var reader = new FileReader();
+                reader.onloadend = function() {
+                    message.image = reader.result;
+                    socket.emit('chat message', message);
+                    messageInput.value = '';
+                    imageInput.value = '';
                 };
+                reader.readAsDataURL(file);
+            } else {
                 socket.emit('chat message', message);
                 messageInput.value = '';
             }
         });
 
-        // Nhận tất cả tin nhắn khi kết nối
         socket.on('all messages', function(data) {
             data.forEach((msg, index) => displayMessage(msg, index));
         });
 
-        // Nhận tin nhắn mới
         socket.on('chat message', function(data) {
             displayMessage(data, messageCount++);
         });
 
-        // Xóa tin nhắn
         socket.on('delete message', function(messageId) {
             var messageElement = document.getElementById('message-' + messageId);
             if (messageElement) {
@@ -142,25 +158,16 @@ app.get('/', (req, res) => {
 // Cấu hình Socket.io
 io.on('connection', (socket) => {
     console.log('A user connected');
-    
-    // Lưu IP của người gửi
     const ip = socket.request.headers['x-forwarded-for'] || socket.request.connection.remoteAddress;
-
-    // Gửi tất cả các tin nhắn hiện có cho người dùng mới kết nối
     socket.emit('all messages', messages);
 
-    // Xử lý tin nhắn mới
     socket.on('chat message', (msg) => {
-        // Thêm tin nhắn vào mảng lưu trữ
-        const messageId = messages.length; // Tạo ID cho tin nhắn
+        const messageId = messages.length;
         const message = { id: messageId, ...msg, ip };
         messages.push(message);
-        
-        // Gửi tin nhắn mới cho tất cả người dùng
         io.emit('chat message', message);
     });
-    
-    // Xử lý xóa tin nhắn
+
     socket.on('delete message', (messageId) => {
         messages = messages.filter(msg => msg.id !== messageId);
         io.emit('delete message', messageId);
