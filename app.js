@@ -6,7 +6,10 @@ const app = express();
 const server = http.createServer(app);
 const io = socketIo(server);
 
-// Định nghĩa mã HTML và JavaScript dưới dạng chuỗi
+// Mảng lưu trữ các tin nhắn
+let messages = [];
+
+// Định nghĩa mã HTML, CSS và JavaScript dưới dạng chuỗi
 const htmlContent = `
 <!DOCTYPE html>
 <html lang="en">
@@ -31,9 +34,10 @@ const htmlContent = `
         }
         #form { position: fixed; bottom: 0; width: 100%; background-color: #fff; padding: 10px; }
         #name { width: 20%; padding: 10px; border: 1px solid #ddd; border-radius: 4px; }
-        #input { width: 60%; padding: 10px; border: 1px solid #ddd; border-radius: 4px; }
+        #input { width: 50%; padding: 10px; border: 1px solid #ddd; border-radius: 4px; }
+        #color { width: 20%; padding: 10px; border: 1px solid #ddd; border-radius: 4px; }
         #submit { padding: 10px; border: none; background-color: #007bff; color: #fff; border-radius: 4px; cursor: pointer; }
-        .ip-btn { cursor: pointer; color: #007bff; background: none; border: none; text-decoration: underline; }
+        .ip-btn, .color-btn { cursor: pointer; color: #007bff; background: none; border: none; text-decoration: underline; }
     </style>
 </head>
 <body>
@@ -41,6 +45,7 @@ const htmlContent = `
     <form id="form" action="">
         <input id="name" autocomplete="off" placeholder="Your name" required />
         <input id="input" autocomplete="off" placeholder="Type a message" required />
+        <input id="color" type="color" value="#000000" />
         <button id="submit">Send</button>
     </form>
     <script src="/socket.io/socket.io.js"></script>
@@ -49,28 +54,32 @@ const htmlContent = `
         var form = document.getElementById('form');
         var nameInput = document.getElementById('name');
         var messageInput = document.getElementById('input');
+        var colorInput = document.getElementById('color');
         var messages = document.getElementById('messages');
+        var messageCount = 0; // Đếm số lượng tin nhắn
 
-        form.addEventListener('submit', function(e) {
-            e.preventDefault();
-            if (messageInput.value && nameInput.value) {
-                var message = {
-                    name: nameInput.value,
-                    text: messageInput.value
-                };
-                socket.emit('chat message', message);
-                messageInput.value = '';
-            }
-        });
-
-        socket.on('chat message', function(data) {
+        // Hàm hiển thị tin nhắn
+        function displayMessage(data, messageId) {
             var item = document.createElement('li');
+            item.id = 'message-' + messageId; // Gán ID cho mỗi tin nhắn
             item.textContent = data.name + ': ' + data.text;
+            item.style.color = data.color; // Áp dụng màu sắc
+
+            // Thêm nút xóa tin nhắn
+            if (data.name === nameInput.value) {
+                var deleteButton = document.createElement('button');
+                deleteButton.className = 'color-btn';
+                deleteButton.textContent = 'Delete';
+                deleteButton.addEventListener('click', function() {
+                    socket.emit('delete message', messageId);
+                });
+                item.appendChild(deleteButton);
+            }
 
             // Thêm nút xem IP
             if (data.ip) {
                 var ipButton = document.createElement('button');
-                ipButton.className = 'ip-btn';
+                ipButton.className = 'color-btn';
                 ipButton.textContent = 'Show IP';
                 ipButton.addEventListener('click', function() {
                     alert('IP Address: ' + data.ip);
@@ -87,6 +96,38 @@ const htmlContent = `
             
             // Cuộn trang đến tin nhắn cuối cùng
             window.scrollTo(0, document.body.scrollHeight);
+        }
+
+        // Xử lý gửi tin nhắn
+        form.addEventListener('submit', function(e) {
+            e.preventDefault();
+            if (messageInput.value && nameInput.value) {
+                var message = {
+                    name: nameInput.value,
+                    text: messageInput.value,
+                    color: colorInput.value // Lấy giá trị màu
+                };
+                socket.emit('chat message', message);
+                messageInput.value = '';
+            }
+        });
+
+        // Nhận tất cả tin nhắn khi kết nối
+        socket.on('all messages', function(data) {
+            data.forEach((msg, index) => displayMessage(msg, index));
+        });
+
+        // Nhận tin nhắn mới
+        socket.on('chat message', function(data) {
+            displayMessage(data, messageCount++);
+        });
+
+        // Xóa tin nhắn
+        socket.on('delete message', function(messageId) {
+            var messageElement = document.getElementById('message-' + messageId);
+            if (messageElement) {
+                messageElement.remove();
+            }
         });
     </script>
 </body>
@@ -105,11 +146,26 @@ io.on('connection', (socket) => {
     // Lưu IP của người gửi
     const ip = socket.request.headers['x-forwarded-for'] || socket.request.connection.remoteAddress;
 
+    // Gửi tất cả các tin nhắn hiện có cho người dùng mới kết nối
+    socket.emit('all messages', messages);
+
+    // Xử lý tin nhắn mới
     socket.on('chat message', (msg) => {
-        // Gửi tin nhắn kèm theo địa chỉ IP của người gửi
-        io.emit('chat message', { ...msg, ip });
+        // Thêm tin nhắn vào mảng lưu trữ
+        const messageId = messages.length; // Tạo ID cho tin nhắn
+        const message = { id: messageId, ...msg, ip };
+        messages.push(message);
+        
+        // Gửi tin nhắn mới cho tất cả người dùng
+        io.emit('chat message', message);
     });
     
+    // Xử lý xóa tin nhắn
+    socket.on('delete message', (messageId) => {
+        messages = messages.filter(msg => msg.id !== messageId);
+        io.emit('delete message', messageId);
+    });
+
     socket.on('disconnect', () => {
         console.log('User disconnected');
     });
@@ -118,5 +174,5 @@ io.on('connection', (socket) => {
 // Khởi động server
 const PORT = 3000;
 server.listen(PORT, () => {
-    console.log(`Server is running on port ${PORT}`);
+    console.log('Server is running on port ' + PORT);
 });
