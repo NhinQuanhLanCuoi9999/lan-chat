@@ -1,1 +1,2 @@
 # lan-chat
+## Cách cài
