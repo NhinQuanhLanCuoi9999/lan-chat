@@ -9,19 +9,19 @@
     `npm install express socket.io`
 
      - Dùng lệnh để tạo file server chứa thông tin của tin nhắn :
-     `nano app.js`
+     `nano server.js`
 - Dùng lệnh tải multer để hiển thị hình ảnh trong tin nhắn :
   `npm install multer`
    
 - Dán code này vào :
 
-[app.js](https://raw.githubusercontent.com/NhinQuanhLanCuoi9999/lan-chat/refs/heads/main/app.js)
+[server.js](https://raw.githubusercontent.com/NhinQuanhLanCuoi9999/lan-chat/refs/heads/main/app.js)
 
 
 - Dán xong thì nhấn ctrl+x để lưu
 
   ## Chạy web
-- Dùng lệnh `node app.js` để chạy web
+- Dùng lệnh `node server.js` để chạy web
 
   Truy cập vào 3 loại đường dẫn dưới đây để đến trang web
   
