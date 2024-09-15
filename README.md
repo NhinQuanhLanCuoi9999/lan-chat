@@ -11,6 +11,10 @@
      - Dùng lệnh để tạo file server chứa thông tin của tin nhắn :
      `nano app.js` 
 - Dán code này vào rồi nhấn ctrl+x để lưu :
+
+
+
+
   ```const express = require('express');
 const http = require('http');
 const socketIo = require('socket.io');
