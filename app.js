@@ -27,22 +27,70 @@ const htmlContent = `
             border-radius: 4px; 
             opacity: 0; /* Bắt đầu với độ mờ 0 */
             transition: opacity 0.5s ease, transform 0.5s ease; /* Thêm hiệu ứng chuyển động */
+            position: relative; /* Đảm bảo phần tử li có thể được xếp chồng đúng */
+            z-index: 5; /* Đảm bảo phần tử li không che khuất video */
         }
         #messages li.show { 
             opacity: 1; /* Độ mờ khi hiệu ứng hoàn tất */
             transform: translateY(0); /* Đặt vị trí cuối cùng của hiệu ứng */
         }
-        #form { position: fixed; bottom: 0; width: 100%; background-color: #fff; padding: 10px; }
-        #name { width: 20%; padding: 10px; border: 1px solid #ddd; border-radius: 4px; }
-        #input { width: 50%; padding: 10px; border: 1px solid #ddd; border-radius: 4px; }
-        #color { width: 20%; padding: 10px; border: 1px solid #ddd; border-radius: 4px; }
-        #submit { padding: 10px; border: none; background-color: #007bff; color: #fff; border-radius: 4px; cursor: pointer; }
+        #form {
+            position: fixed;
+            bottom: 0;
+            width: 100%;
+            background-color: #fff;
+            padding: 10px;
+            box-sizing: border-box; /* Đảm bảo padding không làm mở rộng quá kích thước */
+            display: flex;
+            flex-wrap: wrap; /* Cho phép các phần tử chuyển dòng khi cần */
+            gap: 10px; /* Khoảng cách giữa các phần tử */
+        }
+        #name, #input, #color, #media {
+            flex: 1 1 auto; /* Các phần tử có thể thay đổi kích thước linh hoạt */
+            min-width: 100px; /* Đặt kích thước tối thiểu để giữ cho các phần tử không bị quá nhỏ */
+        }
+        #name {
+            flex: 2; /* Chiếm nhiều không gian hơn để dễ nhập tên */
+        }
+        #input {
+            flex: 3; /* Chiếm nhiều không gian hơn để dễ nhập tin nhắn */
+        }
+        #color {
+            flex: 1; /* Kích thước hợp lý cho picker màu */
+        }
+        #media {
+            flex: 2; /* Kích thước hợp lý cho lựa chọn tập tin */
+        }
+        #send {
+            padding: 10px;
+            border: none;
+            background-color: #007bff;
+            color: #fff;
+            border-radius: 4px;
+            cursor: pointer;
+            flex: 1 1 100%; /* Đảm bảo nút gửi nằm trên một dòng mới */
+            margin-top: 10px; /* Khoảng cách giữa các nút gửi */
+        }
         .ip-btn, .color-btn { cursor: pointer; color: #007bff; background: none; border: none; text-decoration: underline; }
         #messages img {
             max-width: 100%;
             max-height: 200px; /* Hoặc kích thước bạn muốn */
             display: block;
             margin-top: 5px;
+        }
+        #messages video {
+            max-width: 100%;
+            max-height: 200px;
+            display: block;
+            margin-top: 5px;
+            position: relative; /* Đảm bảo video có z-index hoạt động */
+            z-index: 10; /* Đảm bảo video hiển thị trên các phần tử khác */
+        }
+        #messages a {
+            display: block;
+            margin-top: 5px;
+            text-decoration: underline;
+            color: #007bff;
         }
     </style>
 </head>
@@ -52,8 +100,8 @@ const htmlContent = `
         <input id="name" autocomplete="off" placeholder="Your name" required />
         <input id="input" autocomplete="off" placeholder="Type a message" />
         <input id="color" type="color" value="#000000" />
-        <input id="image" type="file" accept="image/*" />
-        <button id="submit">Send</button>
+        <input id="media" type="file" accept="image/*,video/*,text/*" />
+        <button id="send">Send</button>
     </form>
     <script src="/socket.io/socket.io.js"></script>
     <script>
@@ -62,7 +110,7 @@ const htmlContent = `
         var nameInput = document.getElementById('name');
         var messageInput = document.getElementById('input');
         var colorInput = document.getElementById('color');
-        var imageInput = document.getElementById('image');
+        var mediaInput = document.getElementById('media');
         var messages = document.getElementById('messages');
         var messageCount = 0;
 
@@ -78,6 +126,19 @@ const htmlContent = `
                 var img = document.createElement('img');
                 img.src = data.image;
                 item.appendChild(img);
+            }
+            if (data.video) {
+                var video = document.createElement('video');
+                video.src = data.video;
+                video.controls = true;
+                item.appendChild(video);
+            }
+            if (data.textFile) {
+                var textLink = document.createElement('a');
+                textLink.href = data.textFile;
+                textLink.download = 'file.txt'; // Đặt tên tệp mặc định cho người dùng tải về
+                textLink.textContent = 'Download text file';
+                item.appendChild(textLink);
             }
 
             if (data.name === nameInput.value) {
@@ -107,28 +168,44 @@ const htmlContent = `
             window.scrollTo(0, document.body.scrollHeight);
         }
 
-        form.addEventListener('submit', function(e) {
-            e.preventDefault();
+        function sendMessage() {
             var message = {
                 name: nameInput.value,
                 text: messageInput.value,
                 color: colorInput.value
             };
 
-            if (imageInput.files.length > 0) {
-                var file = imageInput.files[0];
+            if (mediaInput.files.length > 0) {
+                var file = mediaInput.files[0];
                 var reader = new FileReader();
                 reader.onloadend = function() {
-                    message.image = reader.result;
+                    if (file.type.startsWith('image/')) {
+                        message.image = reader.result;
+                    } else if (file.type.startsWith('video/')) {
+                        message.video = reader.result;
+                    } else if (file.type.startsWith('text/')) {
+                        var textFile = new Blob([reader.result], { type: 'text/plain' });
+                        var url = URL.createObjectURL(textFile);
+                        message.textFile = url;
+                    }
                     socket.emit('chat message', message);
                     messageInput.value = '';
-                    imageInput.value = '';
+                    mediaInput.value = '';
                 };
-                reader.readAsDataURL(file);
+                if (file.type.startsWith('text/')) {
+                    reader.readAsText(file);
+                } else {
+                    reader.readAsDataURL(file);
+                }
             } else {
                 socket.emit('chat message', message);
                 messageInput.value = '';
             }
+        }
+
+        form.addEventListener('submit', function(e) {
+            e.preventDefault();
+            sendMessage();
         });
 
         socket.on('all messages', function(data) {
@@ -154,7 +231,6 @@ const htmlContent = `
 app.get('/', (req, res) => {
     res.send(htmlContent);
 });
-
 // Cấu hình Socket.io
 io.on('connection', (socket) => {
     console.log('A user connected');
