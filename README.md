@@ -10,16 +10,9 @@
 
      - Dùng lệnh để tạo file server chứa thông tin của tin nhắn :
      `nano app.js` 
-- Dán code này vào rồi nhấn ctrl+x để lưu :
+- Dán code này vào :
 
 [app.js](https://raw.githubusercontent.com/NhinQuanhLanCuoi9999/lan-chat/refs/heads/main/app.js)
-
-
-* Sau đó tạo 1 file html để chứa cấu trúc gửi tin nhắn , bố cục trang web
-  - Dùng lệnh `nano index.html` , và dán code này vào :
- 
-[index.html](https://raw.githubusercontent.com/NhinQuanhLanCuoi9999/lan-chat/refs/heads/main/index.html)
-
 
 
 - Dán xong thì nhấn ctrl+x để lưu
