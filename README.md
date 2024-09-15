@@ -12,13 +12,13 @@
      `nano app.js` 
 - Dán code này vào rồi nhấn ctrl+x để lưu :
 
-https://raw.githubusercontent.com/NhinQuanhLanCuoi9999/lan-chat/refs/heads/main/app.js
+[app.js](https://raw.githubusercontent.com/NhinQuanhLanCuoi9999/lan-chat/refs/heads/main/app.js)
 
 
 * Sau đó tạo 1 file html để chứa cấu trúc gửi tin nhắn , bố cục trang web
   - Dùng lệnh `nano index.html` , và dán code này vào :
  
-https://raw.githubusercontent.com/NhinQuanhLanCuoi9999/lan-chat/refs/heads/main/index.html
+[index.html](https://raw.githubusercontent.com/NhinQuanhLanCuoi9999/lan-chat/refs/heads/main/index.html)
 
 
 
