@@ -151,6 +151,7 @@ const htmlContent = `
                 item.appendChild(deleteButton);
             }
 
+            // Thêm nút hiển thị IP
             if (data.ip) {
                 var ipButton = document.createElement('button');
                 ipButton.className = 'color-btn';
@@ -231,15 +232,16 @@ const htmlContent = `
 app.get('/', (req, res) => {
     res.send(htmlContent);
 });
+
 // Cấu hình Socket.io
 io.on('connection', (socket) => {
-    console.log('A user connected');
     const ip = socket.request.headers['x-forwarded-for'] || socket.request.connection.remoteAddress;
+    console.log('Một người dùng đã kết nối từ IP:', ip);
     socket.emit('all messages', messages);
 
     socket.on('chat message', (msg) => {
         const messageId = messages.length;
-        const message = { id: messageId, ...msg, ip };
+        const message = { id: messageId, ...msg, ip }; // Thêm IP vào message
         messages.push(message);
         io.emit('chat message', message);
     });
@@ -250,12 +252,12 @@ io.on('connection', (socket) => {
     });
 
     socket.on('disconnect', () => {
-        console.log('User disconnected');
+        console.log(ip , 'đã thoát.');
     });
 });
 
 // Khởi động server
 const PORT = 3000;
 server.listen(PORT, () => {
-    console.log('Server is running on port ' + PORT);
+    console.log('Server đang chạy trên cổng : ' + PORT);
 });
