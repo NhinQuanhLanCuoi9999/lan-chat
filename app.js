@@ -1,6 +1,7 @@
 const express = require('express');
 const http = require('http');
 const socketIo = require('socket.io');
+const fs = require('fs');
 
 const app = express();
 const server = http.createServer(app);
@@ -8,6 +9,13 @@ const io = socketIo(server);
 
 // Mảng lưu trữ các tin nhắn
 let messages = [];
+
+// Đọc dữ liệu tin nhắn từ file JSON
+try {
+    messages = JSON.parse(fs.readFileSync('messages.json', 'utf8'));
+} catch (err) {
+    console.error('Không thể đọc file messages.json:', err);
+}
 
 // Định nghĩa mã HTML, CSS và JavaScript dưới dạng chuỗi
 const htmlContent = `
@@ -243,11 +251,27 @@ io.on('connection', (socket) => {
         const messageId = messages.length;
         const message = { id: messageId, ...msg, ip }; // Thêm IP vào message
         messages.push(message);
+
+        // Lưu dữ liệu tin nhắn vào file JSON
+        try {
+            fs.writeFileSync('messages.json', JSON.stringify(messages));
+        } catch (err) {
+            console.error('Không thể lưu file messages.json:', err);
+        }
+
         io.emit('chat message', message);
     });
 
     socket.on('delete message', (messageId) => {
         messages = messages.filter(msg => msg.id !== messageId);
+
+        // Lưu dữ liệu tin nhắn vào file JSON
+        try {
+            fs.writeFileSync('messages.json', JSON.stringify(messages));
+        } catch (err) {
+            console.error('Không thể lưu file messages.json:', err);
+        }
+
         io.emit('delete message', messageId);
     });
 
