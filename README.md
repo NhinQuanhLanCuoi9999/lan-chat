@@ -12,6 +12,13 @@
      `nano server.js`
 - Dùng lệnh tải multer để hiển thị hình ảnh trong tin nhắn :
   `npm install multer`
+
+- Dùng lệnh để truy cập tất cả các file :
+ `termux-setup-storage`
+
+- Tạo tệp lưu trữ tin nhắn :
+`touch messages.json`
+`chmod -R 755 messages.json`
    
 - Dán code này vào :
 
