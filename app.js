@@ -36,7 +36,7 @@ const htmlContent = `
             opacity: 0; /* Bắt đầu với độ mờ 0 */
             transition: opacity 0.5s ease, transform 0.5s ease; /* Thêm hiệu ứng chuyển động */
             position: relative; /* Đảm bảo phần tử li có thể được xếp chồng đúng */
-            z-index: 5; /* Đảm bảo phần tử li không che khuất video */
+            z-index: 10; /* Thay đổi z-index thành 10 cho phần tử li */
         }
         #messages li.show { 
             opacity: 1; /* Độ mờ khi hiệu ứng hoàn tất */
@@ -52,6 +52,7 @@ const htmlContent = `
             display: flex;
             flex-wrap: wrap; /* Cho phép các phần tử chuyển dòng khi cần */
             gap: 10px; /* Khoảng cách giữa các phần tử */
+            z-index: 10; /* Đảm bảo form nằm trên các phần tử khác khi cần */
         }
         #name, #input, #color, #media {
             flex: 1 1 auto; /* Các phần tử có thể thay đổi kích thước linh hoạt */
