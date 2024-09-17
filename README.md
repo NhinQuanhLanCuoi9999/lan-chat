@@ -8,9 +8,7 @@
   - Sau đó tải socket bằng lệnh này:
     `npm install express socket.io`
 
-     - Dùng lệnh để tạo file server chứa thông tin của tin nhắn :
-     `nano server.js`
-- Dùng lệnh tải multer để hiển thị hình ảnh trong tin nhắn :
+     - Dùng lệnh tải multer để hiển thị hình ảnh trong tin nhắn :
   `npm install multer`
 
 - Dùng lệnh để truy cập tất cả các file :
@@ -19,6 +17,10 @@
 - Tạo tệp lưu trữ tin nhắn :
 `touch messages.json`
 `chmod -R 755 messages.json`
+
+- Dùng lệnh để tạo file server chứa thông tin của tin nhắn :
+     `nano server.js`
+
    
 - Dán code này vào :
 
