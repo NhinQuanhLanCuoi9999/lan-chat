@@ -107,7 +107,7 @@ const htmlContent = `
     <ul id="messages"></ul>
     <form id="form" action="">
         <input id="name" autocomplete="off" placeholder="Your name" required />
-        <input id="input" autocomplete="off" placeholder="Type a message" />
+        <input id="input" autocomplete="off" placeholder="Type a message" required />
         <input id="color" type="color" value="#000000" />
         <input id="media" type="file" accept="image/*,video/*,text/*" />
         <button id="send">Send</button>
