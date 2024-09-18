@@ -26,6 +26,7 @@ const htmlContent = `
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>LAN Chat</title>
     <style>
+        /* Các style từ code 1 */
         body { font-family: Arial, sans-serif; margin: 0; padding: 0; background-color: #f0f0f0; }
         #messages { list-style-type: none; margin: 0; padding: 0; }
         #messages li { 
@@ -102,9 +103,98 @@ const htmlContent = `
             color: #007bff;
         }
     </style>
+    <style>
+        /* Các style từ code 2 */
+    .menu-btn {
+      position: fixed;
+      top: 20px;
+      left: 20px;
+      z-index: 30;
+      cursor: pointer;
+      opacity: 0.6;
+    }
+
+    .menu-btn__burger {
+      width: 30px;
+      height: 6px;
+      z-index: 30;
+      background-color: #333;
+      border-radius: 5px;
+      box-shadow: 0 2px 5px rgba(255, 101, 47, 0.2);
+      transition: all 0.5s ease-in-out;
+    }
+
+    .menu-btn__burger::before,
+    .menu-btn__burger::after {
+      content: "";
+      position: absolute;
+      width: 30px;
+      height: 6px;
+      z-index: 30;
+      background-color: #333;
+      border-radius: 5px;
+      box-shadow: 0 2px 5px rgba(255, 101, 47, 0.2);
+      transition: all 0.5s ease-in-out;
+    }
+
+    .menu-btn__burger::before {
+      transform: translateY(-12px);
+      z-index: 30;
+    }
+
+    .menu-btn__burger::after {
+   z-index: 30;
+   transform: translateY(12px);
+    }
+
+.side-nav {
+  z-index: 29;
+  position: fixed;
+  top: 0;
+  left: -250px;
+  width: 250px;
+  height: 100%;
+  background-color: #fff;
+  box-shadow: 0 0 10px rgba(0, 0, 0, 0.5);
+  transition: all 0.5s ease-in-out;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+}
+
+.side-nav.open {
+  left: 0;
+}
+
+.side-nav a.source-btn {
+  display: inline-block;
+  padding: 5px 5px;
+  background-color: #4CAF50;
+  color: white;
+  text-decoration: none;
+  border-radius: 5px;
+  transition: background-color 0.3s ease;
+  margin-top: 10px;
+}
+
+.side-nav a.source-btn:hover {
+  background-color: #45a049;
+}
+
+.side-nav a.source-btn:active {
+  background-color: #3e8e41;
+}
+ </style>
 </head>
 <body>
-    <ul id="messages"></ul>
+    <div class="menu-btn">
+        <span class="menu-btn__burger"></span>
+    </div>
+<div class="side-nav">
+    <a href="https://raw.githubusercontent.com/NhinQuanhLanCuoi9999/lan-chat/refs/heads/main/app.js" class="source-btn">Mã nguồn</a>
+</div>
+<ul id="messages"></ul>
     <form id="form" action="">
         <input id="name" autocomplete="off" placeholder="Your name" required />
         <input id="input" autocomplete="off" placeholder="Type a message" required />
@@ -112,9 +202,11 @@ const htmlContent = `
         <input id="media" type="file" accept="image/*,video/*,text/*" />
         <button id="send">Send</button>
     </form>
+
     <script src="/socket.io/socket.io.js"></script>
     <script>
- var socket = io();
+        /* Các script từ code 1 */
+var socket = io();
 var form = document.getElementById('form');
 var nameInput = document.getElementById('name');
 var messageInput = document.getElementById('input');
@@ -241,10 +333,17 @@ socket.on('delete message', function(messageId) {
     }
 });
     </script>
+    <script>
+        const menuBtn = document.querySelector('.menu-btn');
+        const sideNav = document.querySelector('.side-nav');
+
+        menuBtn.addEventListener('click', () => {
+            sideNav.classList.toggle('open');
+        });
+    </script>
 </body>
 </html>
 `;
-
 // Cấu hình route để phục vụ HTML
 app.get('/', (req, res) => {
     res.send(htmlContent);
