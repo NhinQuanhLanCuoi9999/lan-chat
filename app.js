@@ -114,124 +114,132 @@ const htmlContent = `
     </form>
     <script src="/socket.io/socket.io.js"></script>
     <script>
-        var socket = io();
-        var form = document.getElementById('form');
-        var nameInput = document.getElementById('name');
-        var messageInput = document.getElementById('input');
-        var colorInput = document.getElementById('color');
-        var mediaInput = document.getElementById('media');
-        var messages = document.getElementById('messages');
-        var messageCount = 0;
+ var socket = io();
+var form = document.getElementById('form');
+var nameInput = document.getElementById('name');
+var messageInput = document.getElementById('input');
+var colorInput = document.getElementById('color');
+var mediaInput = document.getElementById('media');
+var messages = document.getElementById('messages');
+var messageCount = 0;
 
-        function displayMessage(data, messageId) {
-            var item = document.createElement('li');
-            item.id = 'message-' + messageId;
-            item.style.color = data.color;
+function displayMessage(data, messageId) {
+    var item = document.createElement('li');
+    item.id = 'message-' + messageId;
+    item.style.color = data.color;
 
-            if (data.text) {
-                item.textContent = data.name + ': ' + data.text;
-            }
-            if (data.image) {
-                var img = document.createElement('img');
-                img.src = data.image;
-                item.appendChild(img);
-            }
-            if (data.video) {
-                var video = document.createElement('video');
-                video.src = data.video;
-                video.controls = true;
-                item.appendChild(video);
-            }
-            if (data.textFile) {
-                var textLink = document.createElement('a');
-                textLink.href = data.textFile;
-                textLink.download = 'file.txt'; // Đặt tên tệp mặc định cho người dùng tải về
-                textLink.textContent = 'Download text file';
-                item.appendChild(textLink);
-            }
+    // Thêm code hiển thị thời gian
+    const timestamp = new Date().toLocaleString();
+    const timestampSpan = document.createElement('span');
+    timestampSpan.style.fontSize = '12px';
+    timestampSpan.style.color = 'gray';
+    timestampSpan.textContent = timestamp;
 
-            if (data.name === nameInput.value) {
-                var deleteButton = document.createElement('button');
-                deleteButton.className = 'color-btn';
-                deleteButton.textContent = 'Delete';
-                deleteButton.addEventListener('click', function() {
-                    socket.emit('delete message', messageId);
-                });
-                item.appendChild(deleteButton);
-            }
+    if (data.text) {
+        item.textContent = data.name + ': ' + data.text;
+        item.appendChild(timestampSpan); // Thêm phần hiển thị thời gian
+    }
+    if (data.image) {
+        var img = document.createElement('img');
+        img.src = data.image;
+        item.appendChild(img);
+    }
+    if (data.video) {
+        var video = document.createElement('video');
+        video.src = data.video;
+        video.controls = true;
+        item.appendChild(video);
+    }
+    if (data.textFile) {
+        var textLink = document.createElement('a');
+        textLink.href = data.textFile;
+        textLink.download = 'file.txt'; // Đặt tên tệp mặc định cho người dùng tải về
+        textLink.textContent = 'Download text file';
+        item.appendChild(textLink);
+    }
 
-            // Thêm nút hiển thị IP
-            if (data.ip) {
-                var ipButton = document.createElement('button');
-                ipButton.className = 'color-btn';
-                ipButton.textContent = 'Show IP';
-                ipButton.addEventListener('click', function() {
-                    alert('IP Address: ' + data.ip);
-                });
-                item.appendChild(ipButton);
-            }
+    if (data.name === nameInput.value) {
+        var deleteButton = document.createElement('button');
+        deleteButton.className = 'color-btn';
+        deleteButton.textContent = 'Delete';
+        deleteButton.addEventListener('click', function() {
+            socket.emit('delete message', messageId);
+        });
+        item.appendChild(deleteButton);
+    }
 
-            messages.appendChild(item);
-            setTimeout(function() {
-                item.classList.add('show');
-            }, 10);
-            window.scrollTo(0, document.body.scrollHeight);
+    // Thêm nút hiển thị IP
+    if (data.ip) {
+        var ipButton = document.createElement('button');
+        ipButton.className = 'color-btn';
+        ipButton.textContent = 'Show IP';
+        ipButton.addEventListener('click', function() {
+            alert('IP Address: ' + data.ip);
+        });
+        item.appendChild(ipButton);
+    }
+
+    messages.appendChild(item);
+    setTimeout(function() {
+        item.classList.add('show');
+    }, 10);
+    window.scrollTo(0, document.body.scrollHeight);
+}
+
+function sendMessage() {
+    var message = {
+        name: nameInput.value,
+        text: messageInput.value,
+        color: colorInput.value
+    };
+
+    if (mediaInput.files.length > 0) {
+        var file = mediaInput.files[0];
+        var reader = new FileReader();
+        reader.onloadend = function() {
+            if (file.type.startsWith('image/')) {
+                message.image = reader.result;
+            } else if (file.type.startsWith('video/')) {
+                message.video = reader.result;
+            } else if (file.type.startsWith('text/')) {
+                var textFile = new Blob([reader.result], { type: 'text/plain' });
+                var url = URL.createObjectURL(textFile);
+                message.textFile = url;
+            }
+            socket.emit('chat message', message);
+            messageInput.value = '';
+            mediaInput.value = '';
+        };
+        if (file.type.startsWith('text/')) {
+            reader.readAsText(file);
+        } else {
+            reader.readAsDataURL(file);
         }
+    } else {
+        socket.emit('chat message', message);
+        messageInput.value = '';
+    }
+}
 
-        function sendMessage() {
-            var message = {
-                name: nameInput.value,
-                text: messageInput.value,
-                color: colorInput.value
-            };
+form.addEventListener('submit', function(e) {
+    e.preventDefault();
+    sendMessage();
+});
 
-            if (mediaInput.files.length > 0) {
-                var file = mediaInput.files[0];
-                var reader = new FileReader();
-                reader.onloadend = function() {
-                    if (file.type.startsWith('image/')) {
-                        message.image = reader.result;
-                    } else if (file.type.startsWith('video/')) {
-                        message.video = reader.result;
-                    } else if (file.type.startsWith('text/')) {
-                        var textFile = new Blob([reader.result], { type: 'text/plain' });
-                        var url = URL.createObjectURL(textFile);
-                        message.textFile = url;
-                    }
-                    socket.emit('chat message', message);
-                    messageInput.value = '';
-                    mediaInput.value = '';
-                };
-                if (file.type.startsWith('text/')) {
-                    reader.readAsText(file);
-                } else {
-                    reader.readAsDataURL(file);
-                }
-            } else {
-                socket.emit('chat message', message);
-                messageInput.value = '';
-            }
-        }
+socket.on('all messages', function(data) {
+    data.forEach((msg, index) => displayMessage(msg, index));
+});
 
-        form.addEventListener('submit', function(e) {
-            e.preventDefault();
-            sendMessage();
-        });
+socket.on('chat message', function(data) {
+    displayMessage(data, messageCount++);
+});
 
-        socket.on('all messages', function(data) {
-            data.forEach((msg, index) => displayMessage(msg, index));
-        });
-
-        socket.on('chat message', function(data) {
-            displayMessage(data, messageCount++);
-        });
-
-        socket.on('delete message', function(messageId) {
-            var messageElement = document.getElementById('message-' + messageId);
-            if (messageElement) {
-                messageElement.remove();
-            }
-        });
+socket.on('delete message', function(messageId) {
+    var messageElement = document.getElementById('message-' + messageId);
+    if (messageElement) {
+        messageElement.remove();
+    }
+});
     </script>
 </body>
 </html>
