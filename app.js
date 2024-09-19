@@ -176,7 +176,7 @@ const htmlContent = `
   border-radius: 5px;
   transition: background-color 0.3s ease;
   margin-top: 10px;
-transform: translate(-50px, -230px);
+transform: translate(-50px, -200px);
 }
 
 .side-nav a.source-btn:hover {
@@ -200,8 +200,8 @@ transform: translate(-50px, -230px);
         <input id="name" autocomplete="off" placeholder="Your name" required />
         <input id="input" autocomplete="off" placeholder="Type a message" required />
         <input id="color" type="color" value="#000000" />
-        <input id="media" type="file" accept="image/*,video/*,text/*" />
-        <button id="send">Send</button>
+       <input id="media" type="file" accept="image/*,video/*,text/*,.pdf,.html,.css,.js,.php,.sql,.doc,.docx,.xlsx" />
+ <button id="send">Send</button>
     </form>
 
     <script src="/socket.io/socket.io.js"></script>
@@ -221,7 +221,6 @@ function displayMessage(data, messageId) {
     item.id = 'message-' + messageId;
     item.style.color = data.color;
 
-    // Thêm code hiển thị thời gian
     const timestamp = new Date().toLocaleString();
     const timestampSpan = document.createElement('span');
     timestampSpan.style.fontSize = '12px';
@@ -230,7 +229,7 @@ function displayMessage(data, messageId) {
 
     if (data.text) {
         item.textContent = data.name + ': ' + data.text;
-        item.appendChild(timestampSpan); // Thêm phần hiển thị thời gian
+        item.appendChild(timestampSpan);
     }
     if (data.image) {
         var img = document.createElement('img');
@@ -246,31 +245,37 @@ function displayMessage(data, messageId) {
     if (data.textFile) {
         var textLink = document.createElement('a');
         textLink.href = data.textFile;
-        textLink.download = 'file.txt'; // Đặt tên tệp mặc định cho người dùng tải về
+        textLink.download = 'file.txt';
         textLink.textContent = 'Download text file';
         item.appendChild(textLink);
     }
-
-    if (data.name === nameInput.value) {
-        var deleteButton = document.createElement('button');
-        deleteButton.className = 'color-btn';
-        deleteButton.textContent = 'Delete';
-        deleteButton.addEventListener('click', function() {
-            socket.emit('delete message', messageId);
-        });
-        item.appendChild(deleteButton);
+    if (data.file) {
+        var fileLink = document.createElement('a');
+        fileLink.href = data.file.url;
+        fileLink.download = data.file.name;
+        fileLink.textContent = 'Download ' + data.file.name;
+        item.appendChild(fileLink);
     }
 
-    // Thêm nút hiển thị IP
+    // Thêm nút xem IP
     if (data.ip) {
         var ipButton = document.createElement('button');
-        ipButton.className = 'color-btn';
-        ipButton.textContent = 'Show IP';
-        ipButton.addEventListener('click', function() {
-            alert('IP Address: ' + data.ip);
-        });
+        ipButton.textContent = 'Xem IP';
+        ipButton.classList.add('ip-btn');
+        ipButton.onclick = function() {
+            alert('IP của người gửi: ' + data.ip);
+        };
         item.appendChild(ipButton);
     }
+
+    // Thêm nút xóa tin nhắn
+    var deleteButton = document.createElement('button');
+    deleteButton.textContent = 'Xóa';
+    deleteButton.classList.add('color-btn');
+    deleteButton.onclick = function() {
+        socket.emit('delete message', messageId); 
+    };
+    item.appendChild(deleteButton);
 
     messages.appendChild(item);
     setTimeout(function() {
@@ -298,16 +303,25 @@ function sendMessage() {
                 var textFile = new Blob([reader.result], { type: 'text/plain' });
                 var url = URL.createObjectURL(textFile);
                 message.textFile = url;
+            } else if (file.type === 'application/pdf' || 
+                       file.type === 'text/html' || 
+                       file.type === 'text/css' || 
+                       file.type === 'application/javascript' || 
+                       file.type === 'application/x-httpd-php' || 
+                       file.type === 'application/sql' || 
+                       file.type === 'application/msword' || 
+                       file.type === 'application/vnd.openxmlformats-officedocument.wordprocessingml.document' || 
+                       file.type === 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet') {
+                // Xử lý các loại file khác
+                var fileBlob = new Blob([reader.result], { type: file.type });
+                var fileUrl = URL.createObjectURL(fileBlob);
+                message.file = { url: fileUrl, name: file.name };
             }
             socket.emit('chat message', message);
             messageInput.value = '';
             mediaInput.value = '';
         };
-        if (file.type.startsWith('text/')) {
-            reader.readAsText(file);
-        } else {
-            reader.readAsDataURL(file);
-        }
+        reader.readAsArrayBuffer(file);  // Đọc file dưới dạng nhị phân cho tất cả các loại file
     } else {
         socket.emit('chat message', message);
         messageInput.value = '';
@@ -333,14 +347,13 @@ socket.on('delete message', function(messageId) {
         messageElement.remove();
     }
 });
-    </script>
-    <script>
-        const menuBtn = document.querySelector('.menu-btn');
-        const sideNav = document.querySelector('.side-nav');
 
-        menuBtn.addEventListener('click', () => {
-            sideNav.classList.toggle('open');
-        });
+const menuBtn = document.querySelector('.menu-btn');
+const sideNav = document.querySelector('.side-nav');
+
+menuBtn.addEventListener('click', () => {
+    sideNav.classList.toggle('open');
+});
     </script>
 </body>
 </html>
