@@ -176,6 +176,7 @@ const htmlContent = `
   border-radius: 5px;
   transition: background-color 0.3s ease;
   margin-top: 10px;
+transform: translate(-50px, -230px);
 }
 
 .side-nav a.source-btn:hover {
