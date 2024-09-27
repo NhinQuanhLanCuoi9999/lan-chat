@@ -189,11 +189,36 @@ transform: translate(-50px, -200px);
  </style>
 </head>
 <body>
+ <style>
+        .chat-button {
+            background-color: #007bff; /* Màu xanh dương */
+            color: white;
+            border: none;
+            padding: 5px 5px;
+            font-size: 16px;
+            border-radius: 5px;
+            cursor: pointer;
+            transition: background-color 0.3s ease;
+transform: translate(-60px, -190px);
+  }
+
+        .chat-button:hover {
+            background-color: #0056b3; /* Màu xanh dương đậm hơn khi hover */
+        }
+    </style>
+     <script>
+        function redirectToChat() {
+            const currentUrl = window.location.hostname;
+             const newUrl = 'http://' + currentUrl + ':8000'; // Sử dụng chuỗi thông thường
+            window.location.href = newUrl;
+        }
+    </script>
     <div class="menu-btn">
         <span class="menu-btn__burger"></span>
     </div>
 <div class="side-nav">
     <a href="https://raw.githubusercontent.com/NhinQuanhLanCuoi9999/lan-chat/refs/heads/main/app.js" class="source-btn">Mã nguồn</a>
+<button class="chat-button" onclick="redirectToChat()">Forum</button>
 </div>
 <ul id="messages"></ul>
     <form id="form" action="">
